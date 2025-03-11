@@ -8,6 +8,7 @@ import { create_controls } from "./components/controls";
 
 import { distribute_grid } from "./helpers";
 import { map_input_weights_to_grid } from "./helpers";
+import { interpolate_colors } from "./helpers";
 import { predict } from "./helpers";
 import { input_from_image } from "./helpers";
 
