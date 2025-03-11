@@ -1,0 +1,26 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+__pycache__/
+
+/train/out*/
+/train/test/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+/web/dist/
