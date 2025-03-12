@@ -151,7 +151,6 @@ function paint() {
         );
 
         const grid_coords = instance_index_to_grid_coords(index, 28, 28);
-        console.log("Grid coords:", grid_coords); //* Debug
 
         const surroundings = [
             [-1, 1],
@@ -216,8 +215,8 @@ window.addEventListener("pointerdown", (event) => {
 window.addEventListener("pointerup", (event) => {
     if (event.button === 0) {
         keys["mouse-primary"] = false;
+        do_features_animation = true;
     }
-    do_features_animation = true;
 });
 
 let do_features_animation = true;
@@ -267,7 +266,7 @@ function animate() {
 animate();
 
 /* Example image */
-input_flattened = await input_from_image("digits/none.png");
+input_flattened = await input_from_image("digits/7.png");
 map_input_weights_to_grid(input_flattened, layer_grids.input);
 
 /* Tensorflow model */
