@@ -8,13 +8,14 @@ import { create_controls } from "./components/controls";
 
 import { distribute_grid } from "./helpers";
 import { map_input_weights_to_grid } from "./helpers";
+import { instance_index_to_grid_coords } from "./helpers";
+import { grid_coords_to_instance_index } from "./helpers";
 import { interpolate_colors } from "./helpers";
 import { predict } from "./helpers";
 import { input_from_image } from "./helpers";
 
-import "./helpers";
-
 const model = await tf.loadLayersModel("/model/model.json");
+//! TODO: stop the input_flattened madness
 let input_flattened;
 
 /* 3D scene */
@@ -134,40 +135,23 @@ distribute_grid(layer_grids.dense2, {
 });
 
 function paint() {
-    const brush = [
-        [0.3, 0.5, 0.3],
-        [0.3, 1.0, 0.3],
-        [0.3, 0.5, 0.3],
-    ];
-
     raycaster.setFromCamera(pointer, camera);
     const intersection = raycaster.intersectObject(layer_grids.input, false);
-    if (intersection.length > 0) {
-        const instanceId = intersection[0].instanceId;
 
-        input_flattened[instanceId] = 1;
+    if (intersection.length > 0) {
+        const index = intersection[0].instanceId;
+
+        input_flattened[index] = 1;
         layer_grids.input.setColorAt(
-            instanceId,
+            index,
             new THREE.Color().setRGB(
                 ...interpolate_colors(1),
                 THREE.SRGBColorSpace
             )
         );
 
-        // const geom = new THREE.SphereGeometry(Math.SQRT2 + gap);
-        // const sphere = new THREE.Mesh(
-        //     geom,
-        //     new THREE.MeshBasicMaterial(0x00ff00)
-        // );
-        const matrix = new THREE.Matrix4();
-        layer_grids.input.getMatrixAt(instanceId, matrix);
-        const pos = new THREE.Vector3();
-        // matrix.decompose(pos, new THREE.Quaternion(), new THREE.Vector3());
-        // sphere.position.copy(pos);
-        // scene.add(sphere);
-
-        const brush_raycaster = new THREE.Raycaster();
-        const direction = new THREE.Vector3();
+        const grid_coords = instance_index_to_grid_coords(index, 28, 28);
+        console.log("Grid coords:", grid_coords); //* Debug
 
         const surroundings = [
             [-1, 1],
@@ -178,21 +162,31 @@ function paint() {
             [0, -1],
             [-1, -1],
             [-1, 0],
-        ].map((dir) => {
-            const direction = new THREE.Vector2(...dir);
-            brush_raycaster.set(pos, direction);
+        ];
 
-            const brush_intersects = raycaster.intersectObject(
-                layer_grids.input,
-                false
+        surroundings.forEach((offset) => {
+            const coords = [
+                grid_coords[0] + offset[0],
+                grid_coords[1] + offset[1],
+            ];
+            const index = grid_coords_to_instance_index(coords, 28);
+            if (index >= 28 * 28) return;
+            if (!(-1 < coords[0] && coords[0] < 28)) return;
+
+            let color = new THREE.Color();
+            layer_grids.input.getColorAt(index, color);
+
+            input_flattened[index] += 0.3;
+            input_flattened[index] = Math.min(1, input_flattened[index]);
+
+            layer_grids.input.setColorAt(
+                index,
+                new THREE.Color().setRGB(
+                    ...interpolate_colors(input_flattened[index]),
+                    THREE.SRGBColorSpace
+                )
             );
-
-            if (brush_intersects.length > 0) {
-                console.log("Meshes are intersecting!");
-                return brush_intersects[0].instanceId;
-            }
         });
-        console.log(surroundings);
 
         layer_grids.input.instanceColor.needsUpdate = true;
         update_grids();
@@ -229,6 +223,12 @@ window.addEventListener("pointerup", (event) => {
 let do_features_animation = true;
 window.addEventListener("keypress", (event) => {
     if (event.code === "Space") do_features_animation = !do_features_animation;
+    if (event.code === "KeyC") {
+        input_flattened = tf.zeros([28, 28]).dataSync();
+        map_input_weights_to_grid(input_flattened, layer_grids.input);
+        update_grids();
+    }
+    if (event.code === "KeyE") eraser_mode = !eraser_mode;
 });
 window.addEventListener("keydown", (event) => {
     keys[event.code] = true;
@@ -267,7 +267,7 @@ function animate() {
 animate();
 
 /* Example image */
-input_flattened = await input_from_image("digits/7.png");
+input_flattened = await input_from_image("digits/none.png");
 map_input_weights_to_grid(input_flattened, layer_grids.input);
 
 /* Tensorflow model */
@@ -290,11 +290,11 @@ function update_grids() {
     );
 
     const shapes_list = activations.map((activation) => activation.shape);
-    console.log("Layer shapes:", shapes_list);
+    // console.log("Layer shapes:", shapes_list);
 
-    activations.forEach((activation, i) => {
-        console.log(`Layer ${i} output:`, activation.shape);
-    });
+    // activations.forEach((activation, i) => {
+    //     console.log(`Layer ${i} output:`, activation.shape);
+    // });
 
     let features1 = tf.squeeze(activations[1], [0]);
     features1 = tf.split(features1, 14, -1);
