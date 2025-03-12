@@ -9,7 +9,7 @@ export function create_camera() {
         0.1,
         1000
     );
-    camera.position.set(0, 0, 70);
+    // camera.position.set(0, 0, 70);
 
     const distance = 150;
     const angle = 35;

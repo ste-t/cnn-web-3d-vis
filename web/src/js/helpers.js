@@ -95,6 +95,17 @@ export function distribute_3d_grid(
     }
 }
 
+export function instance_index_to_grid_coords(index, cols, rows) {
+    let x = index % cols;
+    let y = Math.floor((index / cols) % rows);
+
+    return [x, y];
+}
+
+export function grid_coords_to_instance_index(coords, cols) {
+    return coords[1] * cols + coords[0];
+}
+
 export function map_input_weights_to_grid(weights, grid_instanced_mesh) {
     for (let i = 0; i < weights.length; i++) {
         const color = new THREE.Color();
