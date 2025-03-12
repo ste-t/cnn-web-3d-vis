@@ -23,19 +23,6 @@ def main():
 
     # Architecture
     l = keras.layers
-    # model = keras.models.Sequential([
-
-    #     l.Conv2D(28, (3, 3), activation="relu", input_shape=(28, 28, 1)),
-    #     l.MaxPooling2D((2, 2)),
-    #     l.Conv2D(56, (3, 3), activation="relu"),
-    #     l.MaxPooling2D((2, 2)),
-    #     l.Conv2D(56, (3, 3), activation="relu"),
-
-    #     l.Flatten(),
-    #     l.Dense(56, activation="relu"),
-    #     l.Dense(10)
-
-    # ])
     model = keras.models.Sequential([
 
         l.Conv2D(14, (3, 3), activation="relu", input_shape=(28, 28, 1)),
@@ -43,8 +30,11 @@ def main():
         l.Conv2D(28, (3, 3), activation="relu"),
 
         l.Flatten(),
-        l.Dense(28, activation="relu"),
-        l.Dense(10)
+        l.Dropout(0.2),
+
+        l.Dense(70, activation="relu"),
+        # l.Dropout(0.2),
+        l.Dense(10, activation="softmax")
 
     ])
 
@@ -52,12 +42,12 @@ def main():
 
     model.compile(
         optimizer="adam",
-        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=False),
         metrics=["accuracy"]
     )
 
     # Train
-    hist = model.fit(train_images, train_labels, epochs=5,
+    hist = model.fit(train_images, train_labels, epochs=4,
                      validation_data=(test_images, test_labels))
 
     # Save as python keras and javascript model

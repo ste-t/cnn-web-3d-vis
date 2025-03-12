@@ -46,7 +46,7 @@ const layer_grids = {
     conv1: new THREE.InstancedMesh(geometry.cube, material, 26 * 26),
     pool1: new THREE.InstancedMesh(geometry.cube, material, 13 * 13),
     conv2: new THREE.InstancedMesh(geometry.cube, material, 11 * 11),
-    dense1: new THREE.InstancedMesh(geometry.cube, material, 28),
+    dense1: new THREE.InstancedMesh(geometry.cube, material, 70),
     dense2: new THREE.InstancedMesh(geometry.cube, material, 10),
 };
 const fake_depth = {
@@ -124,7 +124,7 @@ distribute_grid(fake_depth.conv2, {
     pos: [0, 0, -117 - 27 / 2 + gap],
 });
 distribute_grid(layer_grids.dense1, {
-    shape: [1, 28],
+    shape: [1, 70],
     padding: gap,
     pos: [0, 0, -174],
 });
@@ -288,7 +288,7 @@ function update_grids() {
         tf.reshape(input_flattened, [1, 28, 28, 1])
     );
 
-    const shapes_list = activations.map((activation) => activation.shape);
+    // const shapes_list = activations.map((activation) => activation.shape);
     // console.log("Layer shapes:", shapes_list);
 
     // activations.forEach((activation, i) => {
@@ -338,15 +338,15 @@ function update_grids() {
     clearInterval(interval2);
     interval2 = setInterval(swap_feature2, dt / 2);
 
-    let normalized_dense1 = activations[5].div(activations[5].max());
+    let normalized_dense1 = activations[6].div(activations[6].max());
     map_input_weights_to_grid(normalized_dense1.dataSync(), layer_grids.dense1);
 
-    let normalized_output = activations[6].div(activations[6].max());
+    let normalized_output = activations[7].div(activations[7].max());
     map_input_weights_to_grid(normalized_output.dataSync(), layer_grids.dense2);
 
     // Display prediction
     document.getElementById("text").textContent =
-        "This is a " + tf.argMax(activations[6].dataSync()).dataSync();
+        "This is a " + tf.argMax(activations[7].dataSync()).dataSync();
 }
 
 update_grids();
