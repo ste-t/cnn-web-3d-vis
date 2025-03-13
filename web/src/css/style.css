@@ -1,5 +1,22 @@
 body {
+    display: flex;
     color: white;
+
+    justify-content: space-between;
+}
+
+#buttons-container {
+    display: flex;
+    gap: 0.5rem;
+
+    position: fixed;
+    bottom: 0;
+    right: 0;
+
+    justify-content: flex-end;
+
+    width: 100%;
+    margin: 0.5rem;
 }
 
 #scene {
@@ -7,4 +24,16 @@ body {
     top: 0;
     left: 0;
     z-index: -1;
+}
+
+button, #text {
+    background: #22242e;
+    color: inherit;
+    font-size: 1rem;
+
+    cursor: pointer;
+
+    border: none;
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
 }

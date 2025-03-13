@@ -211,6 +211,15 @@ function paint() {
     }
 }
 
+function toggle_animation() {
+    do_features_animation = !do_features_animation;
+}
+function clear_input() {
+    input_flattened = tf.zeros([28, 28]).dataSync();
+    map_input_weights_to_grid(input_flattened, layer_grids.input);
+    update_grids();
+}
+
 window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -240,13 +249,9 @@ window.addEventListener("pointerup", (event) => {
 
 let do_features_animation = true;
 window.addEventListener("keypress", (event) => {
-    if (event.code === "Space") do_features_animation = !do_features_animation;
-    if (event.code === "KeyC") {
-        input_flattened = tf.zeros([28, 28]).dataSync();
-        map_input_weights_to_grid(input_flattened, layer_grids.input);
-        update_grids();
-    }
-    if (event.code === "KeyE") eraser_mode = !eraser_mode;
+    if (event.code === "Space") toggle_animation();
+    if (event.code === "KeyC") clear_input();
+    // if (event.code === "KeyE") eraser_mode = !eraser_mode;
 });
 window.addEventListener("keydown", (event) => {
     keys[event.code] = true;
@@ -261,6 +266,9 @@ window.addEventListener("pointermove", (event) => {
     pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
     pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 });
+
+document.querySelector("#pause").addEventListener("click", toggle_animation)
+document.querySelector("#clear").addEventListener("click", clear_input)
 
 const raycaster = new THREE.Raycaster();
 function update() {
