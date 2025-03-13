@@ -29,14 +29,13 @@ function gen_parallelepiped_geometry(depth) {
 }
 const geometry = {
     cube: new THREE.BoxGeometry(1, 1, 1),
-    sphere: new THREE.SphereGeometry(0.5),
 };
 const default_color = new THREE.Color().setRGB(
     ...interpolate_colors(0),
     THREE.SRGBColorSpace
 );
-const material = new THREE.MeshBasicMaterial({ color: default_color });
-const zeroed_material = new THREE.MeshBasicMaterial({
+const material = new THREE.MeshStandardMaterial({ color: default_color });
+const zeroed_material = new THREE.MeshStandardMaterial({
     color: default_color,
 });
 
@@ -133,6 +132,26 @@ distribute_grid(layer_grids.dense2, {
     padding: gap * 4,
     pos: [0, 0, -204],
 });
+
+// const pointLight = new THREE.PointLight(0xffffff, 1, 0, 0);
+// pointLight.position.set(-200, 200, 200); // Set light position
+// scene.add(pointLight);
+
+const key_light = new THREE.DirectionalLight(0xffffff, 1);
+key_light.position.set(10, 50, 40);
+scene.add(key_light);
+
+const fill_light = new THREE.DirectionalLight(0xffffff, 0.4);
+fill_light.position.copy(key_light);
+fill_light.position.x *= -1;
+scene.add(fill_light);
+
+const back_light = new THREE.DirectionalLight(0xffffff, 0.4);
+back_light.position.set(0, 30, -230);
+scene.add(back_light);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Soft, general light
+scene.add(ambientLight);
 
 function paint() {
     raycaster.setFromCamera(pointer, camera);
