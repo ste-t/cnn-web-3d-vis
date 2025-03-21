@@ -1,6 +1,13 @@
+:root {
+    --bg-color: #181b22;
+    --bg-secondary-color: #22242e;
+    --fg-color: white;
+}
+
 body {
     display: flex;
-    color: white;
+    color: var(--fg-color);
+    background: var(--bg-color);
 
     justify-content: space-between;
 }
@@ -26,8 +33,9 @@ body {
     z-index: -1;
 }
 
-button, #text {
-    background: #22242e;
+button,
+#text {
+    background: var(--bg-secondary-color);
     color: inherit;
     font-size: 1rem;
 
@@ -36,4 +44,8 @@ button, #text {
     border: none;
     border-radius: 10px;
     padding: 0.5rem 1rem;
+}
+
+#text {
+    cursor: default;
 }
