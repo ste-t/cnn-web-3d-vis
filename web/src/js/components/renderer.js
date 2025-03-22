@@ -3,6 +3,10 @@ import * as THREE from "three";
 export function create_renderer() {
     const canvas = document.querySelector("#scene");
 
+    const bg_color = getComputedStyle(
+        document.querySelector(":root")
+    ).getPropertyValue("--bg-color");
+
     if (!canvas) {
         console.error("Canvas element #scene not found");
         return;
@@ -16,8 +20,10 @@ export function create_renderer() {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(
-        new THREE.Color().setHex(0x181b22, THREE.SRGBColorSpace)
+        new THREE.Color().setStyle(bg_color, THREE.SRGBColorSpace)
     );
+
+    console.log(bg_color);
 
     return renderer;
 }
