@@ -6,17 +6,18 @@ import { create_camera } from "./components/camera";
 import { create_renderer } from "./components/renderer";
 import { create_controls } from "./components/controls";
 
-import { distribute_grid } from "./helpers";
-import { map_input_weights_to_grid } from "./helpers";
-import { instance_index_to_grid_coords } from "./helpers";
-import { grid_coords_to_instance_index } from "./helpers";
-import { interpolate_colors } from "./helpers";
-import { predict } from "./helpers";
-import { input_from_image } from "./helpers";
+import {
+    clamp,
+    distribute_grid,
+    map_input_tensor_to_grid,
+    instance_index_to_grid_coords,
+    grid_coords_to_instance_index,
+    interpolate_colors,
+    input_from_image,
+} from "./helpers";
 
 const model = await tf.loadLayersModel("/model/model.json");
-//! TODO: stop the input_flattened madness
-let input_flattened;
+let input;
 
 /* 3D scene */
 const scene = create_scene();
@@ -159,48 +160,56 @@ function paint() {
 
     if (intersection.length > 0) {
         const index = intersection[0].instanceId;
-
-        input_flattened[index] = 1;
-        layer_grids.input.setColorAt(
-            index,
-            new THREE.Color().setRGB(
-                ...interpolate_colors(1),
-                THREE.SRGBColorSpace
-            )
-        );
-
         const grid_coords = instance_index_to_grid_coords(index, 28, 28);
 
-        const surroundings = [
+        const brush = tf.tensor([
+            [[0.3], [0.3], [0.3]],
+            [[0.3], [1.0], [0.3]],
+            [[0.3], [0.3], [0.3]],
+        ]);
+
+        const neighbors = [
+            [-1, -1],
+            [0, -1],
+            [1, -1],
+
+            [-1, 0],
+            [0, 0],
+            [1, 0],
+
             [-1, 1],
             [0, 1],
             [1, 1],
-            [1, 0],
-            [1, -1],
-            [0, -1],
-            [-1, -1],
-            [-1, 0],
         ];
+        const indices = [];
 
-        surroundings.forEach((offset) => {
-            const coords = [
-                grid_coords[0] + offset[0],
-                grid_coords[1] + offset[1],
-            ];
-            const index = grid_coords_to_instance_index(coords, 28);
-            if (index >= 28 * 28) return;
-            if (!(-1 < coords[0] && coords[0] < 28)) return;
+        neighbors.forEach((offset) => {
+            indices.push([
+                clamp(grid_coords[1] + offset[1], 0, 27),
+                clamp(grid_coords[0] + offset[0], 0, 27),
+                0,
+            ]);
+        });
 
-            let color = new THREE.Color();
-            layer_grids.input.getColorAt(index, color);
+        input = tf
+            .scatterND(indices, brush.flatten(), input.shape)
+            .add(input)
+            .minimum(1);
 
-            input_flattened[index] += 0.3;
-            input_flattened[index] = Math.min(1, input_flattened[index]);
+        indices.forEach((index) => {
+            const weight = input
+                .slice([index[0], index[1], 0], [1, 1, 1])
+                .dataSync()[0];
+
+            const instance_index = grid_coords_to_instance_index(
+                [index[1], index[0]],
+                28
+            );
 
             layer_grids.input.setColorAt(
-                index,
+                instance_index,
                 new THREE.Color().setRGB(
-                    ...interpolate_colors(input_flattened[index]),
+                    ...interpolate_colors(weight),
                     THREE.SRGBColorSpace
                 )
             );
@@ -215,8 +224,8 @@ function toggle_animation() {
     do_features_animation = !do_features_animation;
 }
 function clear_input() {
-    input_flattened = tf.zeros([28, 28]).dataSync();
-    map_input_weights_to_grid(input_flattened, layer_grids.input);
+    input = tf.zeros([28, 28, 1]);
+    map_input_tensor_to_grid(input, layer_grids.input);
     update_grids();
 }
 
@@ -245,6 +254,7 @@ window.addEventListener("pointerup", (event) => {
         keys["mouse-primary"] = false;
         do_features_animation = true;
     }
+    map_input_tensor_to_grid(input, layer_grids.input);
 });
 
 let do_features_animation = true;
@@ -267,8 +277,8 @@ window.addEventListener("pointermove", (event) => {
     pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 });
 
-document.querySelector("#pause").addEventListener("click", toggle_animation)
-document.querySelector("#clear").addEventListener("click", clear_input)
+document.querySelector("#pause").addEventListener("click", toggle_animation);
+document.querySelector("#clear").addEventListener("click", clear_input);
 
 const raycaster = new THREE.Raycaster();
 function update() {
@@ -293,8 +303,8 @@ function animate() {
 animate();
 
 /* Example image */
-input_flattened = await input_from_image("digits/7.png");
-map_input_weights_to_grid(input_flattened, layer_grids.input);
+input = await input_from_image("digits/7.png");
+map_input_tensor_to_grid(input, layer_grids.input);
 
 /* Tensorflow model */
 const layers = model.layers;
@@ -311,8 +321,12 @@ let interval2;
 let kernel1_index = 0;
 let kernel2_index = 0;
 function update_grids() {
+    // const activations = intermediate_model.predict(
+    //     tf.reshape(input_flattened, [1, 28, 28, 1])
+    // );
+
     const activations = intermediate_model.predict(
-        tf.reshape(input_flattened, [1, 28, 28, 1])
+        tf.reshape(input, [1, 28, 28, 1])
     );
 
     // const shapes_list = activations.map((activation) => activation.shape);
@@ -338,12 +352,9 @@ function update_grids() {
         if (do_features_animation) kernel1_index++;
         if (kernel1_index > 13) kernel1_index = 0;
 
-        map_input_weights_to_grid(
-            features1[kernel1_index].dataSync(),
-            layer_grids.conv1
-        );
-        map_input_weights_to_grid(
-            features1_pooled[kernel1_index].dataSync(),
+        map_input_tensor_to_grid(features1[kernel1_index], layer_grids.conv1);
+        map_input_tensor_to_grid(
+            features1_pooled[kernel1_index],
             layer_grids.pool1
         );
     }
@@ -356,20 +367,17 @@ function update_grids() {
         if (do_features_animation) kernel2_index++;
         if (kernel2_index > 27) kernel2_index = 0;
 
-        map_input_weights_to_grid(
-            features2[kernel2_index].dataSync(),
-            layer_grids.conv2
-        );
+        map_input_tensor_to_grid(features2[kernel2_index], layer_grids.conv2);
     }
     swap_feature2();
     clearInterval(interval2);
     interval2 = setInterval(swap_feature2, dt / 2);
 
     let normalized_dense1 = activations[6].div(activations[6].max());
-    map_input_weights_to_grid(normalized_dense1.dataSync(), layer_grids.dense1);
+    map_input_tensor_to_grid(normalized_dense1, layer_grids.dense1);
 
     let normalized_output = activations[7].div(activations[7].max());
-    map_input_weights_to_grid(normalized_output.dataSync(), layer_grids.dense2);
+    map_input_tensor_to_grid(normalized_output, layer_grids.dense2);
 
     // Display prediction
     document.getElementById("text").textContent =

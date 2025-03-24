@@ -106,15 +106,20 @@ export function grid_coords_to_instance_index(coords, cols) {
     return coords[1] * cols + coords[0];
 }
 
-export function map_input_weights_to_grid(weights, grid_instanced_mesh) {
-    for (let i = 0; i < weights.length; i++) {
-        const color = new THREE.Color();
-        color.setRGB(...interpolate_colors(weights[i]), THREE.SRGBColorSpace);
+export function map_input_tensor_to_grid(tensor, grid_instanced_mesh) {
+    tensor.data().then((weights) => {
+        for (let i = 0; i < weights.length; i++) {
+            const color = new THREE.Color();
+            color.setRGB(
+                ...interpolate_colors(weights[i]),
+                THREE.SRGBColorSpace
+            );
 
-        grid_instanced_mesh.setColorAt(i, color);
-    }
-    grid_instanced_mesh.material.color.set(0xffffff);
-    grid_instanced_mesh.instanceColor.needsUpdate = true;
+            grid_instanced_mesh.setColorAt(i, color);
+        }
+        grid_instanced_mesh.material.color.set(0xffffff);
+        grid_instanced_mesh.instanceColor.needsUpdate = true;
+    });
 }
 
 export function predict(flat_weights, model) {
@@ -136,9 +141,13 @@ export async function input_from_image(img_path) {
             const img_tensor = tf.browser
                 .fromPixels(img, 1)
                 .div(tf.scalar(255.0));
-            const input_flattened = img_tensor.dataSync();
+            // const input_flattened = img_tensor.dataSync();
 
-            resolve(input_flattened);
+            resolve(img_tensor);
         };
     });
+}
+
+export function clamp(x, lower, upper) {
+    return Math.min(Math.max(lower, x), upper);
 }
