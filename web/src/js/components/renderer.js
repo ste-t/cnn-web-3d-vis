@@ -23,7 +23,5 @@ export function create_renderer() {
         new THREE.Color().setStyle(bg_color, THREE.SRGBColorSpace)
     );
 
-    console.log(bg_color);
-
     return renderer;
 }

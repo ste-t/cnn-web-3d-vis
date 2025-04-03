@@ -141,7 +141,6 @@ export async function input_from_image(img_path) {
             const img_tensor = tf.browser
                 .fromPixels(img, 1)
                 .div(tf.scalar(255.0));
-            // const input_flattened = img_tensor.dataSync();
 
             resolve(img_tensor);
         };

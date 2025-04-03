@@ -8,8 +8,6 @@ body {
     display: flex;
     color: var(--fg-color);
     background: var(--bg-color);
-
-    justify-content: space-between;
 }
 
 #buttons-container {

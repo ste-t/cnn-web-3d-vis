@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.22.0",
+    "hyparquet": "^1.10.2",
     "seedrandom": "^3.0.5",
     "three": "^0.173.0"
   },

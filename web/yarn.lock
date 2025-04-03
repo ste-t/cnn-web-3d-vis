@@ -567,6 +567,11 @@ hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
+hyparquet@^1.10.2:
+  version "1.10.2"
+  resolved "https://registry.yarnpkg.com/hyparquet/-/hyparquet-1.10.2.tgz#d0a8457e8da7745f83c11704bbbcfcdc54b11d07"
+  integrity sha512-q+bzGzQBA0wNbu9ACUsT+/SSd0nnWeJoA9p1XF0dvXb0/kiKtQo6ko5EqFHyq3iwGtH44dmG5JOpZ8McYBLYBw==
+
 is-fullwidth-code-point@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz#f116f8064fe90b3f7844a38997c0b75051269f1d"

@@ -1,5 +1,11 @@
 import * as tf from "@tensorflow/tfjs";
 
+import {
+    asyncBufferFromUrl,
+    parquetMetadataAsync,
+    parquetReadObjects,
+} from "hyparquet";
+
 import * as THREE from "three";
 import { create_scene } from "./components/scene";
 import { create_camera } from "./components/camera";
@@ -154,6 +160,29 @@ scene.add(back_light);
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Soft, general light
 scene.add(ambientLight);
 
+const parquet_file = await asyncBufferFromUrl({ url: "test.parquet" });
+const parquet_metadata = await parquetMetadataAsync(parquet_file);
+async function rnd_example() {
+    const rnd_index = Math.floor(
+        Math.random() * Number(parquet_metadata.num_rows)
+    );
+
+    const data = await parquetReadObjects({
+        file: parquet_file,
+        columns: ["image"],
+        rowStart: rnd_index,
+        rowEnd: rnd_index + 1,
+        utf8: false,
+    });
+
+    const blob = new Blob([data[0].image.bytes], { type: "image/png" }); // Assuming the image is PNG
+    const url = URL.createObjectURL(blob);
+
+    input = await input_from_image(url);
+    map_input_tensor_to_grid(input, layer_grids.input);
+    update_grids();
+}
+
 function paint() {
     raycaster.setFromCamera(pointer, camera);
     const intersection = raycaster.intersectObject(layer_grids.input, false);
@@ -261,6 +290,7 @@ let do_features_animation = true;
 window.addEventListener("keypress", (event) => {
     if (event.code === "Space") toggle_animation();
     if (event.code === "KeyC") clear_input();
+    if (event.code === "KeyR") rnd_example();
     // if (event.code === "KeyE") eraser_mode = !eraser_mode;
 });
 window.addEventListener("keydown", (event) => {
@@ -277,6 +307,7 @@ window.addEventListener("pointermove", (event) => {
     pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 });
 
+document.querySelector("#random").addEventListener("click", rnd_example);
 document.querySelector("#pause").addEventListener("click", toggle_animation);
 document.querySelector("#clear").addEventListener("click", clear_input);
 
