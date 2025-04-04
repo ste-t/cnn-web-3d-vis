@@ -11,12 +11,28 @@
     </head>
 
     <body>
-        <canvas id="scene"></canvas>
-        <span id="text">This is a</span>
-        <div id="buttons-container">
+        <canvas id="scene" class="hidden"></canvas>
+        <span id="text" class="hidden">This is a</span>
+        <div id="buttons-container" class="hidden">
             <button id="random">Random</button>
             <button id="pause">Pause</button>
             <button id="clear">Clear</button>
+        </div>
+
+        <div id="cube-scene">
+            <div class="cube-wrapper">
+                <div class="cube">
+                    <div class="cube-faces">
+                        <div class="cube-face shadow"></div>
+                        <div class="cube-face bottom"></div>
+                        <div class="cube-face top"></div>
+                        <div class="cube-face left"></div>
+                        <div class="cube-face right"></div>
+                        <div class="cube-face back"></div>
+                        <div class="cube-face front"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </body>
 </html>

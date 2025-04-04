@@ -160,7 +160,10 @@ scene.add(back_light);
 const ambientLight = new THREE.AmbientLight(0xffffff, 1); // Soft, general light
 scene.add(ambientLight);
 
-const parquet_file = await asyncBufferFromUrl({ url: "/test.parquet" });
+const parquet_file = await asyncBufferFromUrl({
+    url: "/test.parquet",
+    byteLength: 2595890,
+});
 const parquet_metadata = await parquetMetadataAsync(parquet_file);
 async function rnd_example() {
     const rnd_index = Math.floor(
@@ -416,3 +419,9 @@ function update_grids() {
 }
 
 update_grids();
+
+document
+    .querySelectorAll("body>*")
+    .forEach((element) => element.classList.remove("hidden"));
+
+document.querySelector("#cube-scene").classList.add("hidden");
