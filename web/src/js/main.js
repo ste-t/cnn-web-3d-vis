@@ -424,4 +424,4 @@ document
     .querySelectorAll("body>*")
     .forEach((element) => element.classList.remove("hidden"));
 
-document.querySelector("#cube-scene").classList.add("hidden");
+document.querySelector("#cube-scene").remove();
